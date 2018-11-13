@@ -72,11 +72,13 @@ int main(){
     memcpy(bmp.header,HEADER,header_size);
     memcpy(bmp.info,INFO,info_size);
     //print
-    bmp.size=b2u32(HEADER,2);
+    bmp.size=b2u32((bmp.header),2);
     fclose(image_org);
     printf("size=%ld\n",bmp.size);
-    for(int i=0;i<262144;i++){
-         fprintf(gray,"%d\t",image[i]);
+    pr intf("%d\n", sizeof(r));
+    for (int i = 0; i < 262144; i++)
+    {
+        fprintf(gray, "%d\t", image[i]);
     }
     //new image
     for(int i=0;i<262144;i++){
