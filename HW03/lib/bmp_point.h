@@ -60,21 +60,21 @@ typedef struct __attribute__((packed)) IMAGE512_OUTPUT_STRUCT
     uint8_t header_new[header_size];
     uint8_t info_new[info_size];
     uint8_t color_new[color_size];
-    uint8_t image_new[512*512];
+    uint8_t image_new[512 * 512];
 } image512_output_struct;
 typedef struct __attribute__((packed)) IMAGE256_OUTPUT_STRUCT
 {
     uint8_t header_new[header_size];
     uint8_t info_new[info_size];
     uint8_t color_new[color_size];
-    uint8_t image_new[256*256];
+    uint8_t image_new[256 * 256];
 } image256_output_struct;
 
-uint8_t* BMP_READ(char *filename, BMP *bmp);
+uint8_t *BMP_READ(char *filename, BMP *bmp);
 void BMP_data2dec(BMP *bmp);
 void BMP_WRITE512(char *filename, BMP *bmp, uint8_t *image);
 void BMP_WRITE256(char *filename, BMP *bmp, uint8_t *image);
-void BMP_data_reset(BMP *bmp, char option, int data); 
+void BMP_data_reset(BMP *bmp, char option, int data);
 void BMP_print(BMP *bmp);
 uint8_t *downsample(uint8_t *image, int size);
 double MSE(uint8_t *image, uint8_t *new_image, uint32_t image_pix);
@@ -82,4 +82,5 @@ double PSNR(double mse);
 double *normalization(double *image, uint32_t image_pix);
 double *image_sub(uint8_t *image, double *image_new, uint32_t size);
 uint8_t *double_uint8(double *image, uint32_t size);
+double *uint8_double(uint8_t *image, uint32_t image_pix);
 #endif

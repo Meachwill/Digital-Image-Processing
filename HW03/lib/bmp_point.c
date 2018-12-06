@@ -272,3 +272,14 @@ uint8_t *double_uint8(double *image, uint32_t image_pix)
     }
     return uint_image;
 }
+
+double *uint8_double(uint8_t *image, uint32_t image_pix)
+{ 
+    double *double_image = (double *)(malloc(sizeof(double)*image_pix));
+    for (uint32_t i = 0; i < image_pix; i++)
+    {
+        double_image[i] = ((double)image[i]);
+    }
+    return double_image;
+}
+ 
