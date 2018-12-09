@@ -1,49 +1,79 @@
 #include "bmp_point.h"
 
-uint8_t *BMP_READ(char *filename, BMP *bmp)
+uint8_t *BMP_READ8bit(char *filename, BMP *bmp)
 {
     FILE *image_org = image_org = fopen(filename, "rb");
     fread(bmp->header, sizeof(uint8_t), header_size, image_org);
     fread(bmp->info, sizeof(uint8_t), info_size, image_org);
     fread(bmp->color, sizeof(uint8_t), color_size, image_org);
-    BMP_data2dec(bmp);
-    int image_pix = (bmp->width) * (bmp->width);
+    BMP_Data2dec(bmp);
+    int image_pix = (bmp->width) * (bmp->height);
     uint8_t *img = (uint8_t *)malloc(image_pix * (sizeof(uint8_t)));
     fread(img, sizeof(uint8_t), image_pix, image_org);
     fclose(image_org);
     printf("read ok\n");
     return img;
 }
-void BMP_WRITE512(char *filename, BMP *bmp, uint8_t *image)
+void BMP_WRITE8bit(char *filename, BMP *bmp, uint8_t *image, uint8_t level)
 {
-    int image_pix = 512 * 512;
-    int size = header_size + info_size + color_size + image_pix;
-    image512_output_struct image_output;
-    memcpy(image_output.header_new, bmp->header, header_size);
-    memcpy(image_output.info_new, bmp->info, info_size);
-    memcpy(image_output.color_new, bmp->color, color_size);
-    memcpy(image_output.image_new, image, image_pix);
+    BMP temp_bmp = *bmp;
+    uint32_t bitmap_size = header_size + info_size + color_size + temp_bmp.bitmap_data_size;
+    uint8_t *color_temp = (uint8_t *)malloc(sizeof(uint8_t) * color_size);
+    struct ioutput
+    {
+        uint8_t header_output[header_size];
+        uint8_t info_output[info_size];
+        uint8_t color_output[color_size];
+        uint8_t imageoutput[temp_bmp.bitmap_data_size];
+    } ioutput;
     FILE *NewImageFile = fopen(filename, "wb");
-    fwrite(image_output.header_new, 1, size, NewImageFile);
-    fclose(NewImageFile);
-    printf("write ok\n");
-}
-void BMP_WRITE256(char *filename, BMP *bmp, uint8_t *image)
-{
-    int image_pix = 256 * 256;
-    int size = header_size + info_size + color_size + image_pix;
-    image256_output_struct image_output;
-    memcpy(image_output.header_new, bmp->header, header_size);
-    memcpy(image_output.info_new, bmp->info, info_size);
-    memcpy(image_output.color_new, bmp->color, color_size);
-    memcpy(image_output.image_new, image, bmp->bitmap_data_size);
-    FILE *NewImageFile = fopen(filename, "wb");
-    fwrite(image_output.header_new, 1, size , NewImageFile);
-    fclose(NewImageFile);
-    printf("write ok\n");
+    switch (level)
+    {
+    case 0:
+        for (uint16_t x = 0; x < 256; x++)
+        {
+            color_temp[x * 4 + 0] = x;
+            color_temp[x * 4 + 1] = x;
+            color_temp[x * 4 + 2] = x;
+            color_temp[x * 4 + 3] = x;
+        }
+        memcpy(ioutput.header_output, temp_bmp.header, header_size);
+        memcpy(ioutput.info_output, temp_bmp.info, info_size);
+        memcpy(ioutput.color_output, color_temp, color_size);
+        memcpy(ioutput.imageoutput, image, temp_bmp.bitmap_data_size);
+        fwrite(ioutput.header_output, 1, bitmap_size, NewImageFile);
+        fclose(NewImageFile);
+        printf("write ok\n");
+        break;
+    case 1:
+        memcpy(ioutput.header_output, temp_bmp.header, header_size);
+        memcpy(ioutput.info_output, temp_bmp.info, info_size);
+        memcpy(ioutput.color_output, temp_bmp.color, color_size);
+        memcpy(ioutput.imageoutput, image, temp_bmp.bitmap_data_size);
+        fwrite(ioutput.header_output, 1, bitmap_size, NewImageFile);
+        fclose(NewImageFile);
+        printf("write ok\n");
+        break;
+    case 3:
+        for (uint16_t x = 0; x < 256; x++)
+        {
+            color_temp[x * 4 + 0] = x*5;
+            color_temp[x * 4 + 1] = x*9;
+            color_temp[x * 4 + 2] = x*17;
+            color_temp[x * 4 + 3] = 0;
+        }
+        memcpy(ioutput.header_output, temp_bmp.header, header_size);
+        memcpy(ioutput.info_output, temp_bmp.info, info_size);
+        memcpy(ioutput.color_output, color_temp, color_size);
+        memcpy(ioutput.imageoutput, image, temp_bmp.bitmap_data_size);
+        fwrite(ioutput.header_output, 1, bitmap_size, NewImageFile);
+        fclose(NewImageFile);
+        printf("write ok\n");
+        break;
+    }
 }
 
-void BMP_data2dec(BMP *bmp)
+void BMP_Data2dec(BMP *bmp)
 {
     bmp->id = b2u16(bmp->header, 0);
     bmp->size = b2u32(bmp->header, 2);
@@ -62,7 +92,7 @@ void BMP_data2dec(BMP *bmp)
     bmp->important_colors = b2u32(bmp->info, 36);
 }
 
-void BMP_print(BMP *bmp)
+void BMP_Print(BMP *bmp)
 {
     printf("=================BMP HEADER DATA=================\n");
     printf("ID=%d\n", bmp->id);
@@ -83,7 +113,7 @@ void BMP_print(BMP *bmp)
     printf("=================================================\n");
 }
 
-void BMP_data_reset(BMP *bmp, char option, int data)
+void BMP_Data_Reset(BMP *bmp, char option, int data)
 {
     switch (option)
     {
@@ -189,26 +219,29 @@ void BMP_data_reset(BMP *bmp, char option, int data)
     }
 }
 
-uint8_t *downsample(uint8_t *image, int image_pix)
+uint8_t *downsample(BMP *bmp, uint8_t *image, uint32_t image_pix, uint32_t width, uint32_t height)
 {
     uint8_t *image_output = (uint8_t *)malloc(image_pix * sizeof(uint8_t));
     int tmp = 0;
-    for (int x = 0; x < 512; x++)
+    for (int x = 0; x < width; x++)
     {
-        for (int y = 0; y < 512; y++)
+        for (int y = 0; y < height; y++)
         {
-            if (x % 2 == 0 && y % 2 == 0)
+            if ((x & 1) && (y & 1))
             {
-                // if ((x & 1) && (y & 1)){
-                image_output[tmp] = image[x * 512 + y];
+                image_output[tmp] = image[x * width + y];
                 tmp++;
             }
         }
     }
+    BMP_Data_Reset(bmp, set_size, (width / 2) * (height / 2) + info_size + header_size + color_size);
+    BMP_Data_Reset(bmp, set_width, (width / 2));
+    BMP_Data_Reset(bmp, set_height, (height / 2));
+    BMP_Data_Reset(bmp, set_bitmap_data_size, (width / 2) * (height / 2));
     return (image_output);
 }
 
-double MSE(uint8_t *image, uint8_t *new_image,uint32_t image_pix)
+double MSE(uint8_t *image, uint8_t *new_image, uint32_t image_pix)
 {
     int temp = 0, sum = 0;
     double mse = 0;
@@ -265,7 +298,7 @@ double *image_sub(uint8_t *image, double *image_new, uint32_t image_pix)
 uint8_t *double_uint8(double *image, uint32_t image_pix)
 {
     uint8_t *uint_image = (uint8_t *)(malloc(image_pix));
-    for (uint32_t i = 0; i < image_pix; i++)
+    for (uint16_t i = 0; i < image_pix; i++)
     {
         uint_image[i] = (uint8_t)round(abs((int)image[i]));
         // uint_image[i] = (uint8_t)round((int)image[i]);
@@ -274,12 +307,130 @@ uint8_t *double_uint8(double *image, uint32_t image_pix)
 }
 
 double *uint8_double(uint8_t *image, uint32_t image_pix)
-{ 
-    double *double_image = (double *)(malloc(sizeof(double)*image_pix));
-    for (uint32_t i = 0; i < image_pix; i++)
+{
+    double *double_image = (double *)(malloc(sizeof(double) * image_pix));
+    for (uint16_t i = 0; i < image_pix; i++)
     {
         double_image[i] = ((double)image[i]);
     }
     return double_image;
 }
- 
+
+double *convolution(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height)
+{
+    double *img_convolution = (double *)malloc(sizeof(double) * img_size);
+    uint32_t convolution_x = width - (uint8_t)sqrt((double)con_mask_size);
+    uint32_t convolution_y = height - (uint8_t)sqrt((double)con_mask_size);
+    for (uint16_t y = 0; y < convolution_y; y++)
+    {
+        for (uint16_t x = 0; x < convolution_x; x++)
+        {
+            *(img_convolution + y * width + x + width + 1) = (*(img + y * width + x)) * (*(con_mask + 0)) +
+                                                             (*(img + y * width + x + 1)) * (*(con_mask + 1)) +
+                                                             (*(img + y * width + x + 2)) * (*(con_mask + 2)) +
+                                                             (*(img + y * width + x + width)) * (*(con_mask + 3)) +
+                                                             (*(img + y * width + x + width + 1)) * (*(con_mask + 4)) +
+                                                             (*(img + y * width + x + width + 2)) * (*(con_mask + 5)) +
+                                                             (*(img + y * width + x + 2 * width)) * (*(con_mask + 6)) +
+                                                             (*(img + y * width + x + 2 * width + 1)) * (*(con_mask + 7)) +
+                                                             (*(img + y * width + x + 2 * width + 2)) * (*(con_mask + 8));
+        }
+    }
+    return img_convolution;
+}
+
+void gray_thresholding(double *img, uint32_t img_size, uint8_t level)
+{
+    for (int i = 0; i < img_size; i++)
+    {
+        if (img[i] > level)
+        {
+            img[i] = 255;
+        }
+        else
+        {
+            img[i] = 0;
+        }
+    }
+}
+
+double *dilation(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height)
+{
+    double *img_convolution = (double *)malloc(sizeof(double) * img_size);
+    uint32_t convolution_x = width - (uint8_t)sqrt((double)con_mask_size);
+    uint32_t convolution_y = height - (uint8_t)sqrt((double)con_mask_size);
+    double sum = 0;
+    for (uint16_t y = 0; y < convolution_y; y++)
+    {
+        for (uint16_t x = 0; x < convolution_x; x++)
+        {
+            sum = (*(img + y * width + x)) * (*(con_mask + 0)) +
+                  (*(img + y * width + x + 1)) * (*(con_mask + 1)) +
+                  (*(img + y * width + x + 2)) * (*(con_mask + 2)) +
+                  (*(img + y * width + x + width)) * (*(con_mask + 3)) +
+                  (*(img + y * width + x + width + 1)) * (*(con_mask + 4)) +
+                  (*(img + y * width + x + width + 2)) * (*(con_mask + 5)) +
+                  (*(img + y * width + x + 2 * width)) * (*(con_mask + 6)) +
+                  (*(img + y * width + x + 2 * width + 1)) * (*(con_mask + 7)) +
+                  (*(img + y * width + x + 2 * width + 2)) * (*(con_mask + 8));
+            if (sum >= 255)
+            {
+                *(img_convolution + y * width + x + width + 1) = 255;
+            }
+            else
+            {
+                *(img_convolution + y * width + x + width + 1) = 0;
+            }
+        }
+    }
+    return img_convolution;
+}
+
+double *erosion(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height)
+{
+    double *img_convolution = (double *)malloc(sizeof(double) * img_size);
+    uint32_t convolution_x = width - (uint8_t)sqrt((double)con_mask_size);
+    uint32_t convolution_y = height - (uint8_t)sqrt((double)con_mask_size);
+    double sum = 0;
+    uint16_t mask_point = 0;
+    for (uint16_t k = 0; k < con_mask_size; k++)
+    {
+        if (*(con_mask + k) == 1)
+        {
+            mask_point++;
+        }
+    }
+    for (uint16_t y = 0; y < convolution_y; y++)
+    {
+        for (uint16_t x = 0; x < convolution_x; x++)
+        {
+            sum = (*(img + y * width + x)) * (*(con_mask + 0)) +
+                  (*(img + y * width + x + 1)) * (*(con_mask + 1)) +
+                  (*(img + y * width + x + 2)) * (*(con_mask + 2)) +
+                  (*(img + y * width + x + width)) * (*(con_mask + 3)) +
+                  (*(img + y * width + x + width + 1)) * (*(con_mask + 4)) +
+                  (*(img + y * width + x + width + 2)) * (*(con_mask + 5)) +
+                  (*(img + y * width + x + 2 * width)) * (*(con_mask + 6)) +
+                  (*(img + y * width + x + 2 * width + 1)) * (*(con_mask + 7)) +
+                  (*(img + y * width + x + 2 * width + 2)) * (*(con_mask + 8));
+            if (sum > (255 * (mask_point - 1)))
+            {
+                *(img_convolution + y * width + x + width + 1) = 255;
+            }
+            else
+            {
+                *(img_convolution + y * width + x + width + 1) = 0;
+            }
+        }
+    }
+    return img_convolution;
+}
+// double *image_Operation(uint8_t *image, double *image_new, int size)
+// {
+//     double *image_output = (double *)malloc(size * sizeof(double));
+//     for (int x = 0; x < image_pixel; x++)
+//     {
+//         *(image_output + x) = abs((int)(*(image_new + x) - ((double)(*(image + x)))));
+//     }
+//     return (image_output);
+// }

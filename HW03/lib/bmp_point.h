@@ -29,6 +29,9 @@
 #define set_V 12
 #define set_used_colors 13
 #define set_important_colors 14
+//============================================================
+#define gray_8bit 0
+#define normal_8bit 1
 
 #pragma pack(1)
 typedef struct __attribute__((packed)) BMP
@@ -70,17 +73,20 @@ typedef struct __attribute__((packed)) IMAGE256_OUTPUT_STRUCT
     uint8_t image_new[256 * 256];
 } image256_output_struct;
 
-uint8_t *BMP_READ(char *filename, BMP *bmp);
-void BMP_data2dec(BMP *bmp);
-void BMP_WRITE512(char *filename, BMP *bmp, uint8_t *image);
-void BMP_WRITE256(char *filename, BMP *bmp, uint8_t *image);
-void BMP_data_reset(BMP *bmp, char option, int data);
-void BMP_print(BMP *bmp);
-uint8_t *downsample(uint8_t *image, int size);
+uint8_t *BMP_READ8bit(char *filename, BMP *bmp);
+void BMP_Data2dec(BMP *bmp);
+void BMP_WRITE8bit(char *filename, BMP *bmp, uint8_t *image, uint8_t level);
+void BMP_Data_Reset(BMP *bmp, char option, int data);
+void BMP_Print(BMP *bmp);
+uint8_t *downsample(BMP *bmp, uint8_t *image, uint32_t image_pix, uint32_t width, uint32_t height);
 double MSE(uint8_t *image, uint8_t *new_image, uint32_t image_pix);
 double PSNR(double mse);
 double *normalization(double *image, uint32_t image_pix);
 double *image_sub(uint8_t *image, double *image_new, uint32_t size);
 uint8_t *double_uint8(double *image, uint32_t size);
 double *uint8_double(uint8_t *image, uint32_t image_pix);
+double *convolution(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height);
+double *dilation(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height);
+double *erosion(double *img, double *con_mask, uint32_t img_size, uint32_t con_mask_size, uint32_t width, uint32_t height);
+void gray_thresholding(double *img, uint32_t img_size, uint8_t level);
 #endif
