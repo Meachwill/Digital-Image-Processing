@@ -298,7 +298,7 @@ double *image_sub(uint8_t *image, double *image_new, uint32_t image_pix)
 uint8_t *double_uint8(double *image, uint32_t image_pix)
 {
     uint8_t *uint_image = (uint8_t *)(malloc(image_pix));
-    for (uint16_t i = 0; i < image_pix; i++)
+    for (uint32_t i = 0; i < image_pix; i++)
     {
         uint_image[i] = (uint8_t)round(abs((int)image[i]));
         // uint_image[i] = (uint8_t)round((int)image[i]);
@@ -309,7 +309,7 @@ uint8_t *double_uint8(double *image, uint32_t image_pix)
 double *uint8_double(uint8_t *image, uint32_t image_pix)
 {
     double *double_image = (double *)(malloc(sizeof(double) * image_pix));
-    for (uint16_t i = 0; i < image_pix; i++)
+    for (uint32_t i = 0; i < image_pix; i++)
     {
         double_image[i] = ((double)image[i]);
     }

@@ -6,7 +6,7 @@
 #define image_name "CUB.bmp"
 //imagetest=========================
 #define image_namelenal "lena512.bmp"
-#define image_test "testgrayred.bmp"
+#define image_test "testgray1.bmp"
 //=================================
 #define image_output "balltest.bmp"
 #define image_outputR "balltest_R.bmp"
@@ -64,7 +64,7 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     uint8_t *img_new = (uint8_t *)malloc(sizeof(uint8_t) * bmp.bitmap_data_size);
     printf("test01\n");
     uint8_t **img1 = BMP_READ24bit(image_name, &bmp);         //讀24bit
-    uint8_t *img2 = BMP_READ8bit(image_namelenal, &bmp_lana); //讀8bit
+    //uint8_t *img2 = BMP_READ8bit(image_namelenal, &bmp_lana); //讀8bit
     uint8_t *blue = img1[0];
     uint8_t *green = img1[1];
     uint8_t *red = img1[2];
@@ -78,7 +78,7 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     BMP_Data_Reset(&bmp, set_bitmap_data_size, 512 * 512);
     BMP_Data_Reset(&bmp, set_bits_per_pixel, 8);
     BMP_Data_Reset(&bmp, set_used_colors, 256);
-    img_double = uint8_double(red, bmp.bitmap_data_size);
+    img_double = uint8_double(green, bmp.bitmap_data_size);
     img_convolution = convolution(img_double, &mask_sharpen[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
     gray_thresholding(img_convolution, bmp.bitmap_data_size, 30);
     img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
@@ -89,7 +89,6 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     img_convolution = dilation(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_morphological_size, bmp.width, bmp.height);
     img_convolution = erosion(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
     img_convolution = erosion(img_convolution, &mask_morphological3[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
-    
     img_new = double_uint8(img_convolution, bmp.bitmap_data_size);
     watershed(img_new, &bmp);
     BMP_WRITE8bit(image_test, &bmp, img_new, 0);
