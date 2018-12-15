@@ -54,7 +54,7 @@ void BMP_WRITE8bit(char *filename, BMP *bmp, uint8_t *image, uint8_t level)
         fclose(NewImageFile);
         printf("write ok\n");
         break;
-    case 3:
+    case 2:
         for (uint16_t x = 0; x < 256; x++)
         {
             color_temp[x * 4 + 0] = x*5;

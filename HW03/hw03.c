@@ -6,7 +6,7 @@
 #define image_name "CUB.bmp"
 //imagetest=========================
 #define image_namelenal "lena512.bmp"
-#define image_test "testgray1.bmp"
+#define image_test "img24bit_test.bmp"
 //=================================
 #define image_output "balltest.bmp"
 #define image_outputR "balltest_R.bmp"
@@ -55,7 +55,7 @@ void BMP_WRITE24bit(char *filename, BMP *bmp, uint8_t **img, uint32_t size);
 void watershed(uint8_t *img, BMP *bmp);
 void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_level);
 
-    int main()
+int main()
 {
     BMP bmp;
     BMP bmp_lana;
@@ -63,7 +63,7 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     double *img_double = (double *)malloc(sizeof(double) * bmp.bitmap_data_size);
     uint8_t *img_new = (uint8_t *)malloc(sizeof(uint8_t) * bmp.bitmap_data_size);
     printf("test01\n");
-    uint8_t **img1 = BMP_READ24bit(image_name, &bmp);         //讀24bit
+    uint8_t **img1 = BMP_READ24bit(image_name, &bmp); //讀24bit
     //uint8_t *img2 = BMP_READ8bit(image_namelenal, &bmp_lana); //讀8bit
     uint8_t *blue = img1[0];
     uint8_t *green = img1[1];
@@ -73,11 +73,13 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     // fread(bmp.info, sizeof(uint8_t), info_size, image_org);
     // BMP_Data2dec(&bmp);
     BMP_Print(&bmp);
+    printf("size=%d\n", bmp.bitmap_data_size);
     BMP_Data_Reset(&bmp, set_size, (512 * 512) + 1024 + 54);
     BMP_Data_Reset(&bmp, set_bitmap_data_offset, 1024 + 54);
     BMP_Data_Reset(&bmp, set_bitmap_data_size, 512 * 512);
     BMP_Data_Reset(&bmp, set_bits_per_pixel, 8);
     BMP_Data_Reset(&bmp, set_used_colors, 256);
+    //operation green===============================================
     img_double = uint8_double(green, bmp.bitmap_data_size);
     img_convolution = convolution(img_double, &mask_sharpen[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
     gray_thresholding(img_convolution, bmp.bitmap_data_size, 30);
@@ -89,20 +91,44 @@ void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_le
     img_convolution = dilation(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_morphological_size, bmp.width, bmp.height);
     img_convolution = erosion(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
     img_convolution = erosion(img_convolution, &mask_morphological3[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
-    img_new = double_uint8(img_convolution, bmp.bitmap_data_size);
-    watershed(img_new, &bmp);
-    BMP_WRITE8bit(image_test, &bmp, img_new, 0);
+    // img_new = double_uint8(img_convolution, bmp.bitmap_data_size);
+    green = double_uint8(img_convolution, bmp.bitmap_data_size);
+    watershed(green, &bmp);
+    BMP_WRITE8bit(image_outputG, &bmp, green, 2);
+    //operation red===============================================
+    img_double = uint8_double(red, bmp.bitmap_data_size);
+    img_convolution = convolution(img_double, &mask_sharpen[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    gray_thresholding(img_convolution, bmp.bitmap_data_size, 30);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = dilation(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_morphological_size, bmp.width, bmp.height);
+    img_convolution = erosion(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = erosion(img_convolution, &mask_morphological3[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    // img_new = double_uint8(img_convolution, bmp.bitmap_data_size);
+    red = double_uint8(img_convolution, bmp.bitmap_data_size);
+    watershed(red, &bmp);
+    BMP_WRITE8bit(image_outputR, &bmp, red, 2);
+    //operation blue===============================================
+    img_double = uint8_double(blue, bmp.bitmap_data_size);
+    img_convolution = convolution(img_double, &mask_sharpen[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    gray_thresholding(img_convolution, bmp.bitmap_data_size, 30);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = convolution(img_convolution, &mask_smooth[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = dilation(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_morphological_size, bmp.width, bmp.height);
+    img_convolution = erosion(img_convolution, &mask_morphological1[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    img_convolution = erosion(img_convolution, &mask_morphological3[0][0], bmp.bitmap_data_size, mask_size, bmp.width, bmp.height);
+    // img_new = double_uint8(img_convolution, bmp.bitmap_data_size);
+    blue = double_uint8(img_convolution, bmp.bitmap_data_size);
+    watershed(blue, &bmp);
+    BMP_WRITE8bit(image_outputB, &bmp, blue, 2);
+    //================================test01_24bitoutput===================================
     // BMP_WRITE24bit(image_output, &bmp, img, bmp.bitmap_data_size);
-    //================================test01===================================
-    // BMP_Print(&bmp_lana);
-    // img2 = downsample(&bmp_lana, img2, bmp_lana.bitmap_data_size, bmp_lana.width, bmp_lana.height);
-    // img_double = uint8_double(img2, bmp_lana.bitmap_data_size);
-    // img_convolution = convolution(img_double, &mask_sharpen[0][0], bmp_lana.bitmap_data_size, mask_size, bmp_lana.width, bmp_lana.height);
-    // gray_thresholding(img_convolution, bmp_lana.bitmap_data_size, 50);
-    // img_convolution = dilation(img_convolution, &mask_morphological[0][0], bmp_lana.bitmap_data_size, mask_morphological_size, bmp_lana.width, bmp_lana.height);
-    // img_convolution = erosion(img_convolution, &mask_morphological[0][0], bmp_lana.bitmap_data_size, mask_size, bmp_lana.width, bmp_lana.height);
-    // img_new = double_uint8(img_convolution, bmp_lana.bitmap_data_size);
-    // BMP_WRITE8bit(image_test, &bmp_lana, img2, gray_8bit);
     //=========================================================================
 }
 // BMP_Data_Reset(&temp_bmp, set_size, (512 * 512) + 1024 + 54);
@@ -143,13 +169,13 @@ uint8_t **BMP_READ24bit(char *filename, BMP *bmp)
 
 void BMP_WRITE24bit(char *filename, BMP *bmp, uint8_t **img, uint32_t size)
 {
-    uint32_t bitmap_size = header_size + info_size + size;
-    uint8_t *temp = (uint8_t *)malloc(sizeof(uint8_t) * size);
+    uint32_t bitmap_size = header_size + info_size + bmp->bitmap_data_size;
+    uint8_t *temp = (uint8_t *)malloc(sizeof(uint8_t) * bmp->bitmap_data_size);
     struct ioutput
     {
         uint8_t header_output[header_size];
         uint8_t info_output[info_size];
-        uint8_t image_out[size];
+        uint8_t image_out[bmp->bitmap_data_size];
     } ioutput;
     uint8_t *b = img[0];
     uint8_t *g = img[1];
@@ -166,7 +192,7 @@ void BMP_WRITE24bit(char *filename, BMP *bmp, uint8_t **img, uint32_t size)
     }
     memcpy(ioutput.header_output, bmp->header, header_size);
     memcpy(ioutput.info_output, bmp->info, info_size);
-    memcpy(ioutput.image_out, temp, size);
+    memcpy(ioutput.image_out, temp, bmp->bitmap_data_size);
     FILE *NewImageFile = fopen(filename, "wb");
     fwrite(ioutput.header_output, 1, bitmap_size, NewImageFile);
     fclose(NewImageFile);
@@ -176,9 +202,8 @@ void BMP_WRITE24bit(char *filename, BMP *bmp, uint8_t **img, uint32_t size)
 void watershed(uint8_t *img, BMP *bmp)
 {
     uint8_t edge = 1;
-    uint8_t set=1  ;
+    uint8_t set = 1;
     uint8_t point_color = 1;
-    printf("img=%d\n", img[125 + 512]);
     for (uint16_t x = 1; x < bmp->width; x++)
     {
         for (uint16_t y = 1; y < bmp->height; y++)
@@ -197,8 +222,8 @@ void watershed(uint8_t *img, BMP *bmp)
                         img[y + (x * bmp->width)] = point_color;
                         if (point_color > 253)
                         {
-                            set+=1;
-                            point_color = 65+set;
+                            set += 1;
+                            point_color = 65 + set;
                         }
                     }
                     else
@@ -217,13 +242,12 @@ void watershed(uint8_t *img, BMP *bmp)
                     {
                         if (img[y - 1 + (x * bmp->width)] == img[y + ((x - 1) * bmp->width)])
                         {
-                            img[y + (x * bmp->width)] = img[y + ((x-1)* bmp->width)];
+                            img[y + (x * bmp->width)] = img[y + ((x - 1) * bmp->width)];
                         }
                         else
                         {
                             img[y + (x * bmp->width)] = img[(y - 1) + (x * bmp->width)];
                             weightchaeng(img, bmp->width * bmp->height, img[y + ((x - 1) * bmp->width)], img[y + (x * bmp->width)]);
-
                         }
                     }
                 }
@@ -240,7 +264,7 @@ void watershed(uint8_t *img, BMP *bmp)
     // }
 }
 
-void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level,uint8_t new_level)
+void weightchaeng(uint8_t *img, uint32_t img_size, uint8_t level, uint8_t new_level)
 {
     for (int i = 0; i < img_size; i++)
     {
